@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Distributed Secure File Storage & Deduplication</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo-area">
+      <div class="logo-icon">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      </div>
+      <div class="logo-text">
+        <h2>SecureCAS</h2>
+        <span>Distributed Dedup</span>
+      </div>
+    </div>
+
+    <ul class="nav-links">
+      <li>
+        <a class="nav-item active" data-view="dashboard">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li>
+        <a class="nav-item" data-view="upload">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          <span>Upload & Dedup Studio</span>
+        </a>
+      </li>
+      <li>
+        <a class="nav-item" data-view="files">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+          <span>File Explorer</span>
+        </a>
+      </li>
+      <li>
+        <a class="nav-item" data-view="blocks">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          <span>CAS Block Registry</span>
+        </a>
+      </li>
+      <li>
+        <a class="nav-item" data-view="audit">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <span>Audit & Telemetry</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="user-status" id="user-status-box" style="display: none;">
+      <div class="user-badge">
+        <div class="avatar-circle" id="avatar-letter">A</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name-display">Admin</div>
+          <div class="user-role-tag" id="user-role-display">ADMIN</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="handleLogout()" title="Log out">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Area -->
+  <main class="main-wrapper">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="page-title">
+        <h1>Secure File Storage & CAS Deduplication</h1>
+        <p>SHA-256 Content-Addressable Storage with Relational Multi-Tenancy & Live Telemetry</p>
+      </div>
+      <div class="top-actions">
+        <button class="btn btn-primary" onclick="switchView('upload')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span>Upload File</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- VIEW: DASHBOARD -->
+    <section class="view-panel" id="view-dashboard">
+      <!-- Deduplication Highlight Box -->
+      <div class="dedup-highlight-box">
+        <div class="dedup-header">
+          <div class="dedup-title">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span>CAS Deduplication Efficiency</span>
+          </div>
+          <span class="dedup-badge" id="dedup-badge-text">Calculating...</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="dedup-progress-fill" style="width: 15%;"></div>
+        </div>
+        <div class="dedup-stats-row">
+          <div class="dedup-stat-item">Raw Virtual Bytes: <span id="stat-raw-bytes">0 B</span></div>
+          <div class="dedup-stat-item">Actual Stored Physical Bytes: <span id="stat-physical-bytes">0 B</span></div>
+          <div class="dedup-stat-item">Net Storage Saved: <span id="stat-saved-bytes" style="color: var(--accent-emerald);">0 B</span></div>
+          <div class="dedup-stat-item">Dedup Multiplier: <span id="dedup-ratio-text">1.0x</span></div>
+        </div>
+      </div>
+
+      <!-- Metrics Cards Grid -->
+      <div class="metrics-grid">
+        <div class="card metric-card">
+          <div class="metric-data">
+            <h3>Total Files</h3>
+            <div class="metric-value" id="stat-total-files">0</div>
+            <div class="metric-subtitle">Active across organization</div>
+          </div>
+          <div class="metric-icon icon-blue">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+        </div>
+
+        <div class="card metric-card">
+          <div class="metric-data">
+            <h3>Unique CAS Blocks</h3>
+            <div class="metric-value" id="stat-unique-blocks">0</div>
+            <div class="metric-subtitle">Content-addressed SHA-256</div>
+          </div>
+          <div class="metric-icon icon-cyan">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          </div>
+        </div>
+
+        <div class="card metric-card">
+          <div class="metric-data">
+            <h3>P95 API Latency</h3>
+            <div class="metric-value" id="lat-p95">0 ms</div>
+            <div class="metric-subtitle">P50: <span id="lat-p50">0 ms</span> | P99: <span id="lat-p99">0 ms</span></div>
+          </div>
+          <div class="metric-icon icon-emerald">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+        </div>
+
+        <div class="card metric-card">
+          <div class="metric-data">
+            <h3>Avg Processing Time</h3>
+            <div class="metric-value" id="lat-avg">0 ms</div>
+            <div class="metric-subtitle">FastAPI async chunk pipeline</div>
+          </div>
+          <div class="metric-icon icon-purple">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hot CAS Blocks Section -->
+      <div class="card">
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 14px;">High-Frequency Deduplicated Blocks (Hot Blocks)</h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 12px;">Blocks referenced multiple times across file versions and users, preventing duplicate writes to disk.</p>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Block SHA-256 Hash</th>
+                <th>Block Size</th>
+                <th>Reference Count</th>
+                <th>Disk Space Saved</th>
+              </tr>
+            </thead>
+            <tbody id="hot-blocks-tbody">
+              <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Loading telemetry...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW: UPLOAD & DEDUP STUDIO -->
+    <section class="view-panel" id="view-upload" style="display: none;">
+      <div class="upload-container">
+        <!-- Dropzone -->
+        <div class="dropzone-box" id="upload-dropzone">
+          <input type="file" id="file-input" style="display: none;">
+          <div class="dropzone-icon">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="32" height="32"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          </div>
+          <div>
+            <h3 style="font-size: 1.1rem; color: #fff; font-weight: 700;">Drag and Drop file here</h3>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">or click to browse from your computer</p>
+          </div>
+          <span class="badge badge-cyan">Auto 64 KB SHA-256 Chunking & CAS Deduplication</span>
+        </div>
+
+        <!-- Live Visualizer Card -->
+        <div class="card chunk-visualizer-card">
+          <div class="visualizer-header">
+            <div>
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff;">Real-Time Chunk Deduplication Inspector</h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;" id="upload-status-text">Ready for upload</p>
+            </div>
+          </div>
+
+          <div class="chunks-grid" id="upload-chunks-grid">
+            <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 24px 0;">
+              Upload a file to watch chunks stream, hash, and deduplicate against existing CAS blocks.
+            </div>
+          </div>
+
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background: var(--accent-blue);"></div>
+              <span>New Physical Block</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background: var(--accent-emerald);"></div>
+              <span>Deduplicated Hit (Existing Block Referenced)</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 16px; font-size: 0.85rem; color: var(--text-secondary);" id="upload-savings-live"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW: FILE EXPLORER -->
+    <section class="view-panel" id="view-files" style="display: none;">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff;">Stored Files & Manifests</h3>
+          <div style="width: 280px;">
+            <input type="text" id="file-search-input" class="form-input" placeholder="Search by filename...">
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>File Name</th>
+                <th>Raw Size</th>
+                <th>Chunks</th>
+                <th>SHA-256 Manifest</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="files-tbody">
+              <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading files...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW: CAS BLOCKS REGISTRY -->
+    <section class="view-panel" id="view-blocks" style="display: none;">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff;">Content-Addressable Storage (CAS) Blocks</h3>
+            <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 2px;">Immutable SHA-256 chunk registry with reference counting.</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="triggerGC()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            <span>Run Garbage Collection</span>
+          </button>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Block Hash (SHA-256)</th>
+                <th>Size</th>
+                <th>Active References</th>
+                <th>Encryption</th>
+                <th>Last Accessed</th>
+              </tr>
+            </thead>
+            <tbody id="blocks-tbody">
+              <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading blocks...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW: AUDIT LOGS -->
+    <section class="view-panel" id="view-audit" style="display: none;">
+      <div class="card">
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 16px;">Structured Request & Operation Telemetry Logs</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Resource</th>
+                <th>Status</th>
+                <th>Latency</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="audit-tbody">
+              <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading logs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- AUTH MODAL -->
+  <div class="modal-backdrop" id="auth-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 style="font-size: 1.25rem; font-weight: 700; color: #fff;">Sign In to SecureCAS</h2>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="login-email" class="form-input" required placeholder="admin@storage.local">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" class="form-input" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 12px;">
+          <span>Sign In</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- CHUNK MANIFEST MODAL -->
+  <div class="modal-backdrop" id="chunk-details-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h2 style="font-size: 1.15rem; font-weight: 700; color: #fff;" id="modal-chunk-title">File Chunk Manifest</h2>
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;" id="modal-chunk-meta"></div>
+        </div>
+        <button class="modal-close" onclick="document.getElementById('chunk-details-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div id="modal-chunk-list" style="max-height: 50vh; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <!-- SHARE LINK MODAL -->
+  <div class="modal-backdrop" id="share-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 style="font-size: 1.15rem; font-weight: 700; color: #fff;">Generate Public Share Link</h2>
+        <button class="modal-close" onclick="document.getElementById('share-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div>
+        <input type="hidden" id="share-file-id">
+        <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 14px;">Sharing file: <strong id="share-file-name" style="color: #fff;"></strong></p>
+        <div class="form-group">
+          <label>Link Expiration</label>
+          <select id="share-hours" class="form-input">
+            <option value="24">24 Hours</option>
+            <option value="72" selected>72 Hours (3 Days)</option>
+            <option value="168">7 Days</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="generateShareLink()" style="margin-top: 8px;">Generate Secure Link</button>
+
+        <div id="share-result-container" style="display: none; margin-top: 20px;">
+          <label style="font-size: 0.82rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Shareable URL</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="share-link-input" class="form-input" readonly>
+            <button class="btn btn-secondary" onclick="copyShareLink()">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications Container -->
+  <div id="toast-container"></div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

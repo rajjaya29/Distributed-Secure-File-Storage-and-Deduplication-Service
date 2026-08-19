@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  storage-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: secure-cas-storage
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=Distributed Secure File Storage & Deduplication Service
+      - PORT=8000
+      - HOST=0.0.0.0
+      - SECRET_KEY=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - DEFAULT_ADMIN_EMAIL=admin@storage.local
+      - DEFAULT_ADMIN_PASSWORD=AdminSecure2026!
+      - DEFAULT_CHUNK_SIZE=65536
+    volumes:
+      - cas_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  cas_data:
+    driver: local
